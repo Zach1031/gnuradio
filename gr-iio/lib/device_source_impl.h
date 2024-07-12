@@ -33,10 +33,11 @@ static std::vector<ctxInfo> contexts;
 
 typedef std::vector<ctxInfo>::iterator ctx_it;
 
-class device_source_impl : public device_source
+template <class T>
+class device_source_impl : public device_source<T>
 {
 private:
-    void channel_read(const iio_channel* chn, void* dst, size_t len);
+    void channel_read(const iio_channel* chn, T* dst, size_t len);
 
     /*std::condition_variable iio_cond, iio_cond2;*/
     std::mutex iio_mutex;

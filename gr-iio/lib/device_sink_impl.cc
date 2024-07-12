@@ -31,7 +31,7 @@ device_sink::sptr device_sink::make(const std::string& uri,
                                     bool cyclic)
 {
     return gnuradio::make_block_sptr<device_sink_impl>(
-        device_source_impl::get_context(uri),
+        device_source_impl<float>::get_context(uri),
         true,
         device,
         channels,
@@ -64,7 +64,7 @@ device_sink::sptr device_sink::make_from(iio_context* ctx,
 
 void device_sink_impl::set_params(const iio_param_vec_t& params)
 {
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<float>::set_params(this->phy, params);
 }
 
 /*
@@ -148,7 +148,7 @@ device_sink_impl::device_sink_impl(iio_context* ctx,
 device_sink_impl::~device_sink_impl()
 {
     iio_buffer_destroy(buf);
-    device_source_impl::remove_ctx_history(ctx, destroy_ctx);
+    device_source_impl<float>::remove_ctx_history(ctx, destroy_ctx);
 }
 
 void device_sink_impl::channel_write(const iio_channel* chn, const void* src, size_t len)

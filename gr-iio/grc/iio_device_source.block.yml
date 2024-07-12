@@ -42,9 +42,18 @@ parameters:
     default: packet_len
     hide: part
 
+-   id: type
+    label: Output Type
+    dtype: enum
+    options: [float, byte, short, int]
+    option_labels: [Convert (float), byte, short, int]
+    option_attributes:
+        fcn: [f, b, s, i]
+        offset_type: [float, byte, short, int]
+
 outputs:
 -   domain: stream
-    dtype: short
+    dtype: ${ type } 
     multiplicity: ${ len(channels) }
 -   domain: message
     id: msg
@@ -53,7 +62,7 @@ outputs:
 templates:
   imports: from gnuradio import iio
   make: |
-    iio.device_source(${uri}, ${device}, ${channels}, ${device_phy}, ${params}, ${buffer_size}, ${decimation} - 1)
+    iio.device_source_${type.fcn}(${uri}, ${device}, ${channels}, ${device_phy}, ${params}, ${buffer_size}, ${decimation} - 1)
     self.${id}.set_len_tag_key(${len_tag_key})
 
 file_format: 1

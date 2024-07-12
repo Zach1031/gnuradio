@@ -35,7 +35,7 @@ typename fmcomms2_sink<T>::sptr fmcomms2_sink<T>::make(const std::string& uri,
                                                        bool cyclic)
 {
     return gnuradio::make_block_sptr<fmcomms2_sink_impl<T>>(
-        device_source_impl::get_context(uri), ch_en, buffer_size, cyclic);
+        device_source_impl<T>::get_context(uri), ch_en, buffer_size, cyclic);
 }
 
 template <typename T>
@@ -183,7 +183,7 @@ void fmcomms2_sink_impl<T>::set_bandwidth(unsigned long bandwidth)
 {
     iio_param_vec_t params;
     params.emplace_back("out_voltage_rf_bandwidth", bandwidth);
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<T>::set_params(this->phy, params);
     d_bandwidth = bandwidth;
 }
 
@@ -192,7 +192,7 @@ void fmcomms2_sink_impl<T>::set_rf_port_select(const std::string& rf_port_select
 {
     iio_param_vec_t params;
     params.emplace_back("out_voltage0_rf_port_select", rf_port_select);
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<T>::set_params(this->phy, params);
     d_rf_port_select = rf_port_select;
 }
 
@@ -202,7 +202,7 @@ void fmcomms2_sink_impl<T>::set_frequency(double frequency)
     iio_param_vec_t params;
     params.emplace_back("out_altvoltage1_TX_LO_frequency",
                         static_cast<unsigned long long>(frequency));
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<T>::set_params(this->phy, params);
     d_frequency = frequency;
 }
 
@@ -213,17 +213,17 @@ void fmcomms2_sink_impl<T>::set_samplerate(unsigned long samplerate)
     if (samplerate < MIN_RATE) {
         int ret;
         samplerate = samplerate * DECINT_RATIO;
-        ret = device_source_impl::handle_decimation_interpolation(
+        ret = device_source_impl<T>::handle_decimation_interpolation(
             samplerate, "voltage0", "sampling_frequency", dev, false, true);
         if (ret < 0)
             samplerate = samplerate / 8;
     } else // Disable decimation filter if on
     {
-        device_source_impl::handle_decimation_interpolation(
+        device_source_impl<T>::handle_decimation_interpolation(
             samplerate, "voltage0", "sampling_frequency", dev, true, true);
     }
 
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<T>::set_params(this->phy, params);
     d_samplerate = samplerate;
     update_dependent_params();
 }
@@ -238,7 +238,7 @@ void fmcomms2_sink_impl<T>::set_attenuation(size_t chan, double attenuation)
     iio_param_vec_t params;
     params.emplace_back("out_voltage" + std::to_string(chan) + "_hardwaregain",
                         -attenuation);
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<T>::set_params(this->phy, params);
 
     d_attenuation[chan] = attenuation;
 }
@@ -259,7 +259,7 @@ void fmcomms2_sink_impl<T>::update_dependent_params()
         }
     } else if (d_filter_source.compare("File") == 0) {
         std::string filt(d_filter_filename);
-        if (!device_source_impl::load_fir_filter(filt, phy))
+        if (!device_source_impl<T>::load_fir_filter(filt, phy))
             throw std::runtime_error("Unable to load filter file");
     } else if (d_filter_source.compare("Design") == 0) {
         int ret = ad9361_set_bb_rate_custom_filter_manual(
@@ -270,7 +270,7 @@ void fmcomms2_sink_impl<T>::update_dependent_params()
     } else
         throw std::runtime_error("Unknown filter configuration");
 
-    device_source_impl::set_params(this->phy, params);
+    device_source_impl<T>::set_params(this->phy, params);
     // Filters can only be disabled after the sample rate has been set
     if (d_filter_source.compare("Off") == 0) {
         int ret = ad9361_set_trx_fir_enable(phy, false);
