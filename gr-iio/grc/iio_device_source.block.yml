@@ -51,6 +51,7 @@ parameters:
         fcn: [f, b, s, i]
         offset_type: [float, byte, short, int]
 
+
 outputs:
 -   domain: stream
     dtype: ${ type } 

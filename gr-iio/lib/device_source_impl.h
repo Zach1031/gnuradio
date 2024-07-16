@@ -104,6 +104,15 @@ public:
                                                iio_device* dev,
                                                bool disable_dec,
                                                bool output_chan);
+    
+    float convert_to_float(long tmpbuf, unsigned int bits, bool is_signed);
+    T convert_data_type(long tmpbuf, unsigned int bits, bool is_signed);
+    void convert_data_type_byte(long *tmpbuf, unsigned int bits);
+    void convert_data_type_short(long *tmpbuf, unsigned int bits);
+    void convert_data_type_int(long *tmpbuf, unsigned int bits);
+    float cast_data_type_byte(long tmpbuf);
+    float cast_data_type_short(long tmpbuf);
+    float cast_data_type_int(long tmpbuf);
 };
 
 } // namespace iio

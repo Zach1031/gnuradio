@@ -88,6 +88,7 @@ typedef device_source<std::int8_t> device_source_b;
 typedef device_source<std::int16_t> device_source_s;
 typedef device_source<std::int32_t> device_source_i;
 typedef device_source<float> device_source_f;
+
 } // namespace iio
 } // namespace gr
 

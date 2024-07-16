@@ -71,7 +71,7 @@ fmcomms2_source_impl<T>::get_channels_vector(const std::vector<bool>& ch_en)
     return channels;
 }
 
-template <>
+/*template <>
 fmcomms2_source_impl<int16_t>::fmcomms2_source_impl(iio_context* ctx,
                                                     const std::vector<bool>& ch_en,
                                                     unsigned long buffer_size)
@@ -87,7 +87,7 @@ fmcomms2_source_impl<int16_t>::fmcomms2_source_impl(iio_context* ctx,
                          buffer_size,
                          0)
 {
-}
+}*/
 
 template <typename T>
 fmcomms2_source_impl<T>::fmcomms2_source_impl(iio_context* ctx,
