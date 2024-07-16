@@ -156,19 +156,43 @@ device_sink_impl<T>::~device_sink_impl()
     device_source_impl<T>::remove_ctx_history(ctx, destroy_ctx);
 }
 
-// TODO: modify to properly support different underlying sample sizes
-template <class T>
-void device_sink_impl<T>::channel_write(const iio_channel* chn, const T* src, size_t len)
+template <>
+void device_sink_impl<float>::channel_write(const iio_channel* chn, const float* src, size_t len)
 {
-    uintptr_t dst_ptr, src_ptr = (uintptr_t)src, end = src_ptr + len;
-    unsigned int length = iio_channel_get_data_format(chn)->length / 8;
+    uintptr_t dst_ptr;
+    unsigned int length = (iio_channel_get_data_format(chn)->length + 7) / 8;
     uintptr_t buf_end = (uintptr_t)iio_buffer_end(buf);
     ptrdiff_t buf_step = iio_buffer_step(buf) * (interpolation + 1);
 
+    long tmpbuf;
+    size_t i = 0;
     for (dst_ptr = (uintptr_t)iio_buffer_first(buf, chn);
-         dst_ptr < buf_end && src_ptr + length <= end;
-         dst_ptr += buf_step, src_ptr += length)
-        iio_channel_convert_inverse(chn, (T*)dst_ptr, (const void*)src_ptr);
+         dst_ptr < buf_end && i < len;
+         dst_ptr += buf_step, i++) {
+        
+        tmpbuf = (long)src[i];
+        iio_channel_convert_inverse(chn, (void*)dst_ptr, (const void*)&tmpbuf);
+    }
+}
+
+template <class T>
+void device_sink_impl<T>::channel_write(const iio_channel* chn, const T* src, size_t len)
+{
+    uintptr_t dst_ptr;
+    unsigned int length = (iio_channel_get_data_format(chn)->length + 7) / 8;
+    uintptr_t buf_end = (uintptr_t)iio_buffer_end(buf);
+    ptrdiff_t buf_step = iio_buffer_step(buf) * (interpolation + 1);
+
+    // additional checks are needed if not automatically converted to float
+    if (length != sizeof(T))
+        throw std::runtime_error("Sample size doesn't match chosen output type!\n");
+
+    size_t i = 0;
+    for (dst_ptr = (uintptr_t)iio_buffer_first(buf, chn);
+         dst_ptr < buf_end && i < len;
+         dst_ptr += buf_step, i++) {
+        iio_channel_convert_inverse(chn, (void*)dst_ptr, (const void*)&src[i]);
+    }
 }
 
 template <class T>

@@ -264,28 +264,6 @@ device_source_impl<T>::~device_source_impl()
     remove_ctx_history(ctx, destroy_ctx);
 }
 
-
-template <class T>
-void device_source_impl<T>::convert_data_type_byte(long *tmpbuf, unsigned int bits)
-{
-    // if tmpbuf is negative for native type
-    if (*tmpbuf & (1 << (bits - 1))) *tmpbuf |= (int8_t)-1 ^ ((1 << bits) - 1);
-}
-
-template <class T>
-void device_source_impl<T>::convert_data_type_short(long *tmpbuf, unsigned int bits)
-{
-    // if tmpbuf is negative for native type
-    if (*tmpbuf & (1 << (bits - 1))) *tmpbuf |= (int16_t)-1 ^ ((1 << bits) - 1);
-}
-
-template <class T>
-void device_source_impl<T>::convert_data_type_int(long *tmpbuf, unsigned int bits)
-{
-    // if tmpbuf is negative for native type
-    if (*tmpbuf & (1 << (bits - 1))) *tmpbuf |= (int32_t)-1 ^ ((1 << bits) - 1);
-}
-
 template <class T>
 float device_source_impl<T>::cast_data_type_byte(long tmpbuf)
 {
@@ -304,44 +282,21 @@ float device_source_impl<T>::cast_data_type_int(long tmpbuf)
     return (float)(*(int32_t *)&tmpbuf);
 }
 
-template <class T>
-void device_source_impl<T>::channel_read(const iio_channel* chn, T* dst, size_t len)
+template <>
+void device_source_impl<float>::channel_read(const iio_channel* chn, float* dst, size_t len)
 {
     uintptr_t src_ptr;
-    unsigned int length = (iio_channel_get_data_format(chn)->length + 7) / 8,
-                 bits = (iio_channel_get_data_format(chn)->bits);
+    unsigned int length = (iio_channel_get_data_format(chn)->length + 7) / 8;
     uintptr_t buf_end = (uintptr_t)iio_buffer_end(buf);
     ptrdiff_t buf_step = iio_buffer_step(buf) * (decimation + 1);
     bool is_signed = iio_channel_get_data_format(chn)->is_signed;    
 
+    float (device_source_impl<float>::*float_cast)(long) = &device_source_impl<float>::cast_data_type_int;
 
-    void (device_source_impl<T>::*convert)(long*, unsigned int) = &device_source_impl<T>::convert_data_type_byte;
-    float (device_source_impl<T>::*float_cast)(long) = &device_source_impl<T>::cast_data_type_byte;
-
-    // additional checks are needed if not automatically converted to float
-    if constexpr (!std::is_same_v<T, float>) {
-        if (length != sizeof(T))
-            throw std::runtime_error("Sample size doesn't match chosen output type!\n");
-
-        // adalm2000 input is unsigned
-        // TODO determine proper way to treat unsigned data
-        //if (is_signed)
-        //    throw std::runtime_error("Unsigned data is not supported in this format!\n"); 
-    }
-
-    if (length == 1) {
-        convert = &device_source_impl::convert_data_type_byte;
-        float_cast = &device_source_impl<T>::cast_data_type_byte;
-
-    }
-    else if (length == 2) {
-        convert = &device_source_impl::convert_data_type_short;
-        float_cast = &device_source_impl<T>::cast_data_type_short;
-    }
-    else {
-        convert = &device_source_impl::convert_data_type_int;
-        float_cast = &device_source_impl<T>::cast_data_type_int;
-    }
+    if (length == 1) 
+        float_cast = &device_source_impl<float>::cast_data_type_byte;
+    else if (length == 2) 
+        float_cast = &device_source_impl<float>::cast_data_type_short;
 
     long tmpbuf;
     size_t i = 0;
@@ -351,12 +306,28 @@ void device_source_impl<T>::channel_read(const iio_channel* chn, T* dst, size_t 
 
         iio_channel_convert(chn, (void*)&tmpbuf, (const void*)src_ptr);
 
-        (this->*convert)(&tmpbuf, bits);
+        dst[i] = (this->*float_cast)(tmpbuf);
+    }
+}
 
-        if constexpr (std::is_same_v<T, float>)
-            dst[i] = (this->*float_cast)(tmpbuf);
-        else
-            dst[i] = *(T *)&tmpbuf;
+template <class T>
+void device_source_impl<T>::channel_read(const iio_channel* chn, T* dst, size_t len)
+{
+    uintptr_t src_ptr;
+    unsigned int length = (iio_channel_get_data_format(chn)->length + 7) / 8;
+    uintptr_t buf_end = (uintptr_t)iio_buffer_end(buf);
+    ptrdiff_t buf_step = iio_buffer_step(buf) * (decimation + 1);
+
+    // additional checks are needed if not automatically converted to float
+    if (length != sizeof(T))
+        throw std::runtime_error("Sample size doesn't match chosen output type!\n");
+
+    T tmpbuf;
+    size_t i = 0;
+    for (src_ptr = (uintptr_t)iio_buffer_first(buf, chn) + byte_offset;
+         src_ptr < buf_end && i < len;
+         src_ptr += buf_step, i++) {
+        iio_channel_convert(chn, (void*)&dst[i], (const void*)src_ptr);
     }
 }
 
