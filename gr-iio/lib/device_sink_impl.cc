@@ -170,7 +170,7 @@ void device_sink_impl<float>::channel_write(const iio_channel* chn, const float*
          dst_ptr < buf_end && i < len;
          dst_ptr += buf_step, i++) {
         
-        tmpbuf = (long)src[i];
+        tmpbuf = (long)(src[i]);
         iio_channel_convert_inverse(chn, (void*)dst_ptr, (const void*)&tmpbuf);
     }
 }

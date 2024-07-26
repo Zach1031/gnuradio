@@ -3,6 +3,15 @@ label: IIO Device Sink
 flags: [ python, throttle ]
 
 parameters:
+-   id: type
+    label: Input Type
+    dtype: enum
+    options: [float, byte, short, int]
+    option_labels: [Convert (float), byte, short, int]
+    option_attributes:
+        fcn: [f, b, s, i]
+        offset_type: [float, byte, short, int]
+
 -   id: uri
     label: IIO context URI
     dtype: string
@@ -47,16 +56,6 @@ parameters:
     label: Packet Length Tag
     dtype: string
     hide: ${( 'part' )}
-
- id: type
-    label: Output Type
-    dtype: enum
-    options: [float, byte, short, int]
-    option_labels: [Convert (float), byte, short, int]
-    option_attributes:
-        fcn: [f, b, s, i]
-        offset_type: [float, byte, short, int]
-
 
 inputs:
 -   domain: stream
