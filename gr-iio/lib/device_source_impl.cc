@@ -291,12 +291,16 @@ void device_source_impl<float>::channel_read(const iio_channel* chn, float* dst,
     ptrdiff_t buf_step = iio_buffer_step(buf) * (decimation + 1);
     bool is_signed = iio_channel_get_data_format(chn)->is_signed;    
 
-    float (device_source_impl<float>::*float_cast)(long) = &device_source_impl<float>::cast_data_type_int;
+    float (device_source_impl<float>::*float_cast)(long); 
 
     if (length == 1) 
         float_cast = &device_source_impl<float>::cast_data_type_byte;
     else if (length == 2) 
         float_cast = &device_source_impl<float>::cast_data_type_short;
+    else if (length == 3)
+        float_cast = &device_source_impl<float>::cast_data_type_int;
+    else
+        throw std::runtime_error("Sample size greater than 32 bits!\n");
 
     long tmpbuf;
     size_t i = 0;
