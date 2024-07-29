@@ -297,7 +297,7 @@ void device_source_impl<float>::channel_read(const iio_channel* chn, float* dst,
         float_cast = &device_source_impl<float>::cast_data_type_byte;
     else if (length == 2) 
         float_cast = &device_source_impl<float>::cast_data_type_short;
-    else if (length == 3)
+    else if (length == 4)
         float_cast = &device_source_impl<float>::cast_data_type_int;
     else
         throw std::runtime_error("Sample size greater than 32 bits!\n");
