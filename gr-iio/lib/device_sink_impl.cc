@@ -165,12 +165,14 @@ void device_sink_impl<float>::channel_write(const iio_channel* chn, const float*
     ptrdiff_t buf_step = iio_buffer_step(buf) * (interpolation + 1);
 
     long tmpbuf;
+    long max_val = (1 << ((length * 8) - 1)) - 1; // max signed value for underlying size
+
     size_t i = 0;
     for (dst_ptr = (uintptr_t)iio_buffer_first(buf, chn);
          dst_ptr < buf_end && i < len;
          dst_ptr += buf_step, i++) {
         
-        tmpbuf = (long)(src[i]);
+        tmpbuf = (long)(src[i] * max_val);
         iio_channel_convert_inverse(chn, (void*)dst_ptr, (const void*)&tmpbuf);
     }
 }

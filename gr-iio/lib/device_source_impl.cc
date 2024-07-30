@@ -303,6 +303,8 @@ void device_source_impl<float>::channel_read(const iio_channel* chn, float* dst,
         throw std::runtime_error("Sample size greater than 32 bits!\n");
 
     long tmpbuf;
+    long max_val = (1 << ((length * 8) - 1)) - 1; // max signed value for underlying size
+
     size_t i = 0;
     for (src_ptr = (uintptr_t)iio_buffer_first(buf, chn) + byte_offset;
          src_ptr < buf_end && i < len;
@@ -310,7 +312,7 @@ void device_source_impl<float>::channel_read(const iio_channel* chn, float* dst,
 
         iio_channel_convert(chn, (void*)&tmpbuf, (const void*)src_ptr);
 
-        dst[i] = (this->*float_cast)(tmpbuf);
+        dst[i] = ((this->*float_cast)(tmpbuf)) / max_val;
     }
 }
 
